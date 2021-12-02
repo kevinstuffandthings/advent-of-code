@@ -8,7 +8,7 @@ do
     echo "Scaffolding day $i..."
     mkdir $dir
     cat <<_EOF_ > $dir/README.md
-[Day $i] (https://adventofcode.com/2021/day/$i)
+[Day $i](https://adventofcode.com/2021/day/$i)
 
 \`\`\`
 $ bash main.sh
