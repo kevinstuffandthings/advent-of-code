@@ -46,29 +46,40 @@ In this example, there are 7 measurements that are larger than the previous meas
 How many measurements are larger than the previous measurement?
 _EOF_
 
+# first, we want to see how many arguments have been passed to this command.
+# we want exactly one argument -- the name of the file containing our input data.
 if [ $# != 1 ]
 then
+  # if we didn't get exactly one argument, we'll send an error message to STDERR, and we'll
+  # exit with a non-zero return code (which tells the caller that things didn't go well).
   echo "Usage: ${0##*/} REPORT" >&2
   exit 1
 fi
 
+# if we're here, we got exactly one command, so we assume it's our report input file.
+# if we cannot find that file, we'll do more error stuff.
 report=$1
-
 if [ ! -f $report ]
 then
   echo "Unable to locate report $report" >&2
-  exit 1
+  exit 1 # we could theoretically use a different return code here, but meh...
 fi
 
+# let's initialize some variables here...
 increases=0
 prev=
+
+# we'll read each line into an entry variable, until we run out.
+# it's the inward redirection at the end of the loop block that gives us our entries.
 while read entry
 do
-  echo -n "ENTRY: $entry; PREV: $prev"
+  echo -n "ENTRY: $entry; PREV: $prev" # -n keeps us from adding a newline!
+
+  # double brackets for multiple conditions
   if [[ -n "$prev" && $prev < $entry ]]
   then
     echo "; INCREASE!"
-    increases=$(($increases + 1))
+    increases=$(($increases + 1)) # double parens allows for math. complete different than singles
   else
     echo
   fi

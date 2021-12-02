@@ -36,12 +36,15 @@ _EOF_
 hpos=0
 depth=0
 
+# for this loop, we're reading from an inline source below.
+# we're also separating each term into its own "op" and "val" variables.
 while read op val
 do
   echo "we want to go $op for $val"
+  # the case statement makes quick work of things. the double semicolon tells us when a case is done
   case $op in
     forward)
-      hpos=$(($hpos + $val))
+      hpos=$(($hpos + $val)) # more math!
       ;;
     up)
       depth=$(($depth - $val))
