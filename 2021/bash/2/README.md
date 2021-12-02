@@ -1,4 +1,4 @@
-[Day 1](https://adventofcode.com/2021/day/2)
+[Day 2](https://adventofcode.com/2021/day/2)
 
 ```
 $ bash main.sh
