@@ -36,7 +36,7 @@ _EOF_
 hpos=0
 depth=0
 
-# for this loop, we're reading from an inline source below.
+# for this loop, we're reading from an inline heredoc source below.
 # we're also separating each term into its own "op" and "val" variables.
 while read op val
 do
