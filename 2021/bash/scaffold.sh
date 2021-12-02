@@ -2,11 +2,12 @@
 
 for i in {1..25}
 do
-  if [ ! -d $i ]
+  dir=$(printf "%02d" $i)
+  if [ ! -d $dir ]
   then
     echo "Scaffolding day $i..."
-    mkdir $i
-    cat <<_EOF_ > $i/README.md
+    mkdir $dir
+    cat <<_EOF_ > $dir/README.md
 [Day $i] (https://adventofcode.com/2021/day/$i)
 
 \`\`\`
