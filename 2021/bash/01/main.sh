@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# this <<_EOF_ notiation is called a "heredoc".
+# in this case, i'm using it just to have one big comment. we're not sending the doc anywhere,
+# so it's useful for a comment block.
 <<_EOF_
 --- Day 1: Sonar Sweep ---
 
