@@ -53,7 +53,7 @@ do
       depth=$(($depth + $val))
       ;;
   esac
-done <<_EOF_
+done <<_EOF_ # note, you don't have to use _EOF_. it could be anything. just pick something you're unlikely to find in the doc itself!
 forward 5
 down 5
 forward 8
