@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# note, you don't have to use _EOF_ for a heredoc. it could be anything.
+# just pick something you're unlikely to find in the doc itself!
 <<_EOF_
 --- Day 2: Dive! ---
 
@@ -53,7 +55,7 @@ do
       depth=$(($depth + $val))
       ;;
   esac
-done <<_EOF_ # note, you don't have to use _EOF_. it could be anything. just pick something you're unlikely to find in the doc itself!
+done <<_EOF_
 forward 5
 down 5
 forward 8
