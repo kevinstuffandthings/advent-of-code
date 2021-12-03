@@ -12,5 +12,11 @@ ENTRY: 240; PREV: 207; INCREASE!
 ENTRY: 269; PREV: 240; INCREASE!
 ENTRY: 260; PREV: 269
 ENTRY: 263; PREV: 260; INCREASE!
-WE HAVE 7 INCREASES
+7
+```
+
+without debugging info:
+```
+$ bash main.sh report.txt 2>/dev/null
+7
 ```

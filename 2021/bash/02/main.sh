@@ -42,7 +42,7 @@ depth=0
 # we're also separating each term into its own "op" and "val" variables.
 while read op val
 do
-  echo "we want to go $op for $val"
+  echo "- we want to go $op for $val" >&2
   # the case statement makes quick work of things. the double semicolon tells us when a case is done
   case $op in
     forward)
@@ -64,4 +64,6 @@ down 8
 forward 2
 _EOF_
 
-echo "final: horizontal position is $hpos, depth is $depth. result: $(($depth * $hpos))"
+result=$(($depth * $hpos))
+echo "final: horizontal position is $hpos, depth is $depth. result: $result" >&2
+echo $result

@@ -76,17 +76,17 @@ prev=
 # it's the inward redirection at the end of the loop block that gives us our entries.
 while read entry
 do
-  echo -n "ENTRY: $entry; PREV: $prev" # -n keeps us from adding a newline!
+  echo -n "ENTRY: $entry; PREV: $prev" >&2 # -n keeps us from adding a newline!
 
   # double brackets for multiple conditions
   if [[ -n "$prev" && $prev < $entry ]]
   then
-    echo "; INCREASE!"
+    echo "; INCREASE!" >&2
     increases=$(($increases + 1)) # double parens allows for math. complete different than singles
   else
-    echo
+    echo >&2
   fi
   prev=$entry
 done < $report
 
-echo "WE HAVE $increases INCREASES"
+echo $increases
