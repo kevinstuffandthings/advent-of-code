@@ -2,4 +2,5 @@
 
 ```
 $ bash main.sh
+5
 ```
