@@ -1,6 +1,4 @@
-#!/bin/bash
-
-<<_EOF_
+/*
 --- Day 5: Hydrothermal Venture ---
 
 You come across a field of hydrothermal vents on the ocean floor! These vents constantly produce large, opaque clouds, so it would be best to avoid them if possible.
@@ -40,31 +38,37 @@ In this diagram, the top left corner is 0,0 and the bottom right corner is 9,9. 
 To avoid the most dangerous areas, you need to determine the number of points where at least two lines overlap. In the above example, this is anywhere in the diagram with a 2 or larger - a total of 5 points.
 
 Consider only horizontal and vertical lines. At how many points do at least two lines overlap?
-_EOF_
+*/
 
-# as we figure out the marked points, we'll store them in a tempfile
-points=$(mktemp)
+CREATE TEMPORARY TABLE segment_data (value text NOT NULL);
+\COPY segment_data(value) FROM 'input.txt';
 
-while read x1 y1 x2 y2 # our sed transformation will end up yielding our 4 coordinates
-do
-  if [[ $x1 == $x2 || $y1 == $y2 ]] # only consider those horizontal and vertical lines!
-  then
-    for x in $(seq $x1 $x2) # generate sequences. we can't use the {n..m} notation cause of the variables
-    do
-      for y in $(seq $y1 $y2)
-      do
-        echo "$x,$y" >> $points # now that we have a point, send it to our file
-      done
-    done
-  fi
-done < <(sed 's/[^0-9]*/ /g' input.txt) # here we use an inline sed command to remove all the non-numerics
+CREATE TEMPORARY VIEW segments
+AS
+SELECT value[1]::int AS x1, value[2]::int AS y1, value[3]::int AS x2, value[4]::int AS y2
+FROM (
+  SELECT REGEXP_SPLIT_TO_ARRAY(value, E'\\D*') AS value
+  FROM segment_data
+) x;
 
-# here we:
-# - sort the points file
-# - getting the unique entries, along with occurrence counts
-# - then we eliminate the entries with just a single occurrence
-# - then we count how many lines are left
-# - then we use awk to get just the value (without the whitespace wc might generate)
-sort $points |uniq -c |egrep -v "^\s*1\s" |wc -l |awk '{print $1}'
-
-rm -f $points
+WITH axial_segments
+AS (
+  SELECT *
+  FROM segments
+  WHERE x1=x2 OR y1=y2
+)
+SELECT COUNT(*)
+FROM (
+  SELECT x, y
+  FROM (
+    SELECT GENERATE_SERIES(LEAST(x1, x2), GREATEST(x1, x2)) AS x, y1 AS y
+    FROM axial_segments
+    WHERE x1!=x2
+    UNION ALL
+    SELECT x1 AS x, GENERATE_SERIES(LEAST(y1, y2), GREATEST(y1, y2)) AS y
+    FROM axial_segments
+    WHERE y1!=y2
+  ) s
+  GROUP BY x, y
+  HAVING COUNT(*)>1
+) s;
