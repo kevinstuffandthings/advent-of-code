@@ -58,22 +58,28 @@ The score of the winning board can now be calculated. Start by finding the sum o
 To guarantee victory against the giant squid, figure out which board will win first. What will your final score be if you choose that board?
 */
 
+-- the schema approach is nice, let's use it again!
 DROP SCHEMA IF EXISTS aoc04 CASCADE;
 CREATE SCHEMA aoc04;
 
+-- this is not a particularly interesting table, but imagine if we wanted to assign a player
+-- name to a board. this could be a nice place to do it.
 CREATE TABLE aoc04.boards (
   id int NOT NULL PRIMARY KEY
 );
 
+-- we'll store the different cells in a related table
 CREATE TABLE aoc04.board_cells (
-  board_id int NOT NULL REFERENCES aoc04.boards(id) ON DELETE CASCADE,
-  row_ord int NOT NULL,
-  col_ord int NOT NULL,
+  board_id int NOT NULL REFERENCES aoc04.boards(id) ON DELETE CASCADE, -- if we delete a board, all the cell records go along with it, automatically
+  row_ord int NOT NULL, -- think our y coordinate
+  col_ord int NOT NULL, -- and our x coordinate
   value int NOT NULL,
   selected boolean NOT NULL default false,
-  UNIQUE (board_id, row_ord, col_ord)
+  UNIQUE (board_id, row_ord, col_ord) -- for each board, we better not have multiple rows for a single xy coordinate
 );
 
+-- reading from flat files and such isn't necessarily postgres' strength. but we can do it,
+-- thanks to the power of a plpgsql anonymous code block!
 DO $$
   DECLARE
     v_num_boards int := 3;
@@ -84,16 +90,24 @@ DO $$
     LOOP
       v_file := '/Users/kevin/Development/advent-of-code/2021/psql/04/boards/0'||v_board_id||'.txt';
 
+      -- for each board, we'll create a temporary table to read in the raw data...
       CREATE TEMP TABLE tt_board (row_ord SERIAL, data text);
+      -- ... and then we'll use "dynamic sql" to load in the board contents
       EXECUTE FORMAT ('COPY tt_board(data) FROM %L', v_file);
 
       DECLARE
         v_board_row record;
       BEGIN
+        -- first, we create our board record that we'll relate its cells to
         INSERT INTO aoc04.boards (id) VALUES (v_board_id);
 
+        -- we'll then loop over each raw row we read in from the files
         FOR v_board_row IN SELECT * FROM tt_board
         LOOP
+          -- we can split the raw row data (which will be 5 numbers) into an array,
+          -- and then UNNEST the array which turns it into individual rows in our subquery.
+          -- this then allows us to use the row_ord value and an ROW_NUMBER window function to get
+          -- our x, our y, and our value
           INSERT INTO aoc04.board_cells (board_id, row_ord, col_ord, value)
           SELECT v_board_id, v_board_row.row_ord, ROW_NUMBER() OVER (), value::int
           FROM (
@@ -107,6 +121,8 @@ DO $$
   END;
 $$;
 
+-- at this point, we have all our boards populated into the db. let's use another anonymous block of code
+-- to execute the actual drawing!
 DO $$
   DECLARE
     v_drawings text[] := STRING_TO_ARRAY('7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1', ',');
@@ -115,17 +131,22 @@ DO $$
     v_matched boolean;
     v_result int;
   BEGIN
+    -- we'll go through the values one at a time, and...
     FOREACH v_drawing IN ARRAY v_drawings
     LOOP
+      -- ... update each cell as "selected" if its number were called
       UPDATE aoc04.board_cells SET selected=true WHERE value=v_drawing::int;
 
+      -- then, we want to see if we have any boards that won, meaning...
       SELECT board_id INTO v_board_id
       FROM (
+        -- within a single column, 5 cells are selected
         SELECT board_id, col_ord AS ord, COUNT(*) AS num_selected
         FROM aoc04.board_cells
         WHERE selected
         GROUP BY board_id, col_ord
         UNION ALL
+        -- or within a single row, 5 cells are selected
         SELECT board_id, row_ord AS ord, COUNT(*) AS num_selected
         FROM aoc04.board_cells
         WHERE selected
@@ -133,6 +154,7 @@ DO $$
       ) x
       WHERE num_selected=5;
 
+      -- if we found a board like this, let's do all the math the problem wants us to do, and end the game
       IF v_board_id IS NOT NULL
       THEN
         RAISE INFO 'board % wins with %!', v_board_id, v_drawing;

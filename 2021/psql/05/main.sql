@@ -40,27 +40,35 @@ To avoid the most dangerous areas, you need to determine the number of points wh
 Consider only horizontal and vertical lines. At how many points do at least two lines overlap?
 */
 
+-- first, let's load our segment data into a temp table
 CREATE TEMPORARY TABLE segment_data (value text NOT NULL);
 \COPY segment_data(value) FROM 'input.txt';
 
+-- since all the data in there is raw (0,9 -> 5,9), let's make a view on top of the table to parse it into sensible fields
 CREATE TEMPORARY VIEW segments
 AS
-SELECT value[1]::int AS x1, value[2]::int AS y1, value[3]::int AS x2, value[4]::int AS y2
+SELECT value[1]::int AS x1, value[2]::int AS y1, value[3]::int AS x2, value[4]::int AS y2 -- postgres arrays are indexed from 1, not 0!!!!
 FROM (
-  SELECT REGEXP_SPLIT_TO_ARRAY(value, E'\\D*') AS value
+  SELECT REGEXP_SPLIT_TO_ARRAY(value, E'\\D*') AS value -- this splits the data into an array of values based on non-numeric consecutive chars
   FROM segment_data
 ) x;
 
+-- we're gonna want to use this a few times, so we make a "CTE" (common table expression).
+-- we could have made another view, but what fun would that be?
 WITH axial_segments
 AS (
   SELECT *
   FROM segments
-  WHERE x1=x2 OR y1=y2
+  WHERE x1=x2 OR y1=y2 -- the problem tells us only to consider horizontal or vertical
 )
 SELECT COUNT(*)
 FROM (
   SELECT x, y
   FROM (
+    -- GENERATE_SERIES is super convenient, but it wants ascending numbers.
+    -- we could provide a -1 as a 3rd argument to specify the "increment" value, but
+    -- since we don't care about direction, we can just use LEAST and GREATEST to end
+    -- up with increasing series, no matter what. it saves us a conditional!
     SELECT GENERATE_SERIES(LEAST(x1, x2), GREATEST(x1, x2)) AS x, y1 AS y
     FROM axial_segments
     WHERE x1!=x2
@@ -70,5 +78,5 @@ FROM (
     WHERE y1!=y2
   ) s
   GROUP BY x, y
-  HAVING COUNT(*)>1
+  HAVING COUNT(*)>1 -- the HAVING clause is like a WHERE, but for the aggregate metrics calculated during a GROUP BY
 ) s;
